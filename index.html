@@ -1,0 +1,695 @@
+<canvas id="universe-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+<canvas id="fx-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-50"></canvas>
+
+<!-- MÀN HÌNH BẢO TRÌ -->
+<div id="maintenance-overlay" class="hidden fixed inset-0 z-[90] bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 text-center">
+    <div class="w-20 h-20 rounded-full bg-rose-500/20 border border-rose-500/50 flex items-center justify-center mb-6 animate-pulse">
+        <i data-lucide="wrench" class="w-10 h-10 text-rose-400"></i>
+    </div>
+    <h2 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-amber-300 mb-3">Vũ Trụ Đang Nâng Cấp</h2>
+    <p class="text-slate-300 max-w-md mb-6">Máy chủ <strong>Hoàng Đức Dương</strong> đang bảo trì hệ thống. Vui lòng quay lại sau ít phút nhé!</p>
+    <button id="bypass-maintenance-btn" class="text-xs text-slate-500 underline hover:text-rose-400">Đăng nhập quyền Máy Chủ (Admin)</button>
+</div>
+
+<!-- BROADCAST ALERT -->
+<div id="broadcast-modal" class="hidden fixed inset-0 z-[85] bg-rose-950/80 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
+    <div class="glass-card border-2 border-rose-400 max-w-lg w-full p-8 rounded-3xl text-center relative shadow-[0_0_60px_rgba(244,63,94,0.6)]">
+        <div class="w-16 h-16 mx-auto bg-rose-500 rounded-full flex items-center justify-center mb-4 animate-bounce">
+            <i data-lucide="bell-ring" class="w-8 h-8 text-white"></i>
+        </div>
+        <span class="px-3 py-1 rounded-full bg-rose-500/30 text-rose-200 text-xs font-semibold uppercase">Thông Báo Khẩn Cấp Từ <span id="broadcast-sender">Dương</span></span>
+        <h3 id="broadcast-text" class="text-2xl font-bold text-white mt-4 mb-6 leading-relaxed">Nhớ em quá, mở máy lên nhắn tin cho anh ngay đi! ❤️</h3>
+        <button id="close-broadcast-btn" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-rose-500 to-pink-600 font-bold text-white shadow-lg">Đã Nhận Tín Hiệu ❤️</button>
+    </div>
+</div>
+
+<!-- MÀN HÌNH KHÓA -->
+<section id="lock-screen" class="fixed inset-0 z-40 flex items-center justify-center p-4 transition-all duration-700">
+    <div class="glass-card max-w-md w-full p-8 rounded-3xl border border-white/15 shadow-[0_0_50px_rgba(236,72,153,0.25)] relative overflow-hidden">
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-pink-500/20 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"></div>
+
+        <div class="text-center mb-8 relative">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-pink-300 mb-3">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> ETERNAL LOVE UNIVERSE
+            </div>
+            <h1 class="font-['Dancing_Script'] text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-amber-200">Dương & Dung</h1>
+            <p class="text-xs text-slate-400 mt-2 tracking-widest uppercase">Since 27 • 06 • 2026</p>
+        </div>
+
+        <div id="auth-step-password" class="space-y-4">
+            <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1.5">Mật mã vũ trụ tình yêu</label>
+                <input type="password" id="passcode-input" placeholder="Nhập mật khẩu..." class="w-full bg-slate-900/70 border border-white/15 rounded-xl px-4 py-3.5 text-center tracking-[0.3em] text-lg font-bold text-pink-200 focus:outline-none focus:border-pink-500 transition">
+                <p id="auth-error" class="text-xs text-rose-400 mt-2 hidden text-center"></p>
+            </div>
+            <button id="verify-passcode-btn" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-pink-600 via-rose-500 to-purple-600 font-bold text-white shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
+                <i data-lucide="unlock" class="w-4 h-4"></i> Mở Khóa Không Gian
+            </button>
+            <div class="flex justify-between items-center pt-2 text-xs text-slate-400">
+                <button id="hint-btn" class="hover:text-pink-300 flex items-center gap-1"><i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Gợi ý</button>
+                <span class="text-emerald-400 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> Sẵn sàng</span>
+            </div>
+            <div id="hint-box" class="hidden p-3 rounded-xl bg-pink-500/10 border border-pink-500/20 text-xs text-pink-200 text-center">
+                Gợi ý: Ngày yêu viết liền (DDMMYYYY) -> <strong>27062026</strong>
+            </div>
+        </div>
+
+        <div id="auth-step-role" class="hidden space-y-4 animate-fade-in">
+            <p class="text-center text-sm text-slate-300 mb-4">Chọn vai trò đăng nhập:</p>
+            <button data-role="host" class="role-select-btn w-full p-4 rounded-2xl bg-indigo-950/60 border border-indigo-400/40 hover:border-indigo-400 flex items-center justify-between group transition">
+                <div class="flex items-center gap-3.5 text-left">
+                    <div class="w-12 h-12 rounded-xl bg-indigo-500/30 flex items-center justify-center text-indigo-300 font-bold text-lg">👑</div>
+                    <div>
+                        <div class="font-bold text-white flex items-center gap-2">Hoàng Đức Dương <span class="text-[10px] px-2 py-0.5 rounded bg-indigo-500 text-white">HOST</span></div>
+                        <div class="text-xs text-slate-400">19/11/2009 • Toàn quyền điều khiển</div>
+                    </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition"></i>
+            </button>
+            <button data-role="vip" class="role-select-btn w-full p-4 rounded-2xl bg-pink-950/60 border border-pink-400/40 hover:border-pink-400 flex items-center justify-between group transition">
+                <div class="flex items-center gap-3.5 text-left">
+                    <div class="w-12 h-12 rounded-xl bg-pink-500/30 flex items-center justify-center text-pink-300 font-bold text-lg">👸</div>
+                    <div>
+                        <div class="font-bold text-white flex items-center gap-2">Ma Thùy Dung <span class="text-[10px] px-2 py-0.5 rounded bg-pink-500 text-white">VIP</span></div>
+                        <div class="text-xs text-slate-400">10/12/2009 • Công chúa vũ trụ</div>
+                    </div>
+                </div>
+                <i data-lucide="chevron-right" class="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- GIAO DIỆN CHÍNH -->
+<main id="main-app" class="hidden relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pb-28 pt-4 space-y-8">
+    <header class="glass-card rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 border border-white/10 sticky top-3 z-30">
+        <div class="flex items-center gap-3">
+            <div id="current-user-avatar" class="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-indigo-600 flex items-center justify-center text-lg shadow-lg">👑</div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span id="current-user-name" class="font-bold text-sm sm:text-base text-white">Hoàng Đức Dương</span>
+                    <span id="current-user-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 border border-indigo-400/30">HOST</span>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-slate-400">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span id="partner-status-text">Đang trực tuyến real-time</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="open-host-panel-btn" class="hidden px-3 py-2 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-200 text-xs font-semibold flex items-center gap-1.5">
+                <i data-lucide="shield-check" class="w-4 h-4"></i> Máy Chủ
+            </button>
+            <button id="open-settings-btn" class="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200" title="Cài đặt"><i data-lucide="settings" class="w-4 h-4"></i></button>
+            <button id="logout-btn" class="p-2.5 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-300" title="Khóa màn hình"><i data-lucide="lock" class="w-4 h-4"></i></button>
+        </div>
+    </header>
+
+    <!-- 4 KHỐI LỚN -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div id="hero-love-timer" class="glass-card neon-border-pink rounded-3xl p-6 cursor-pointer group hover:scale-[1.01] transition-all relative overflow-hidden">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-pink-300 flex items-center gap-1.5"><i data-lucide="heart" class="w-4 h-4 fill-pink-500 text-pink-500 animate-pulse"></i> Hành Trình Yêu Thương</span>
+                <span class="text-xs text-slate-400 group-hover:text-pink-300 transition flex items-center gap-1">Dòng thời gian <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i></span>
+            </div>
+            <div class="grid grid-cols-4 gap-2 sm:gap-3 text-center my-4">
+                <div class="bg-slate-950/60 border border-pink-500/20 rounded-2xl p-3">
+                    <div id="timer-days" class="text-2xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-pink-300">0</div>
+                    <div class="text-[11px] text-slate-400 uppercase mt-1">Ngày</div>
+                </div>
+                <div class="bg-slate-950/60 border border-pink-500/20 rounded-2xl p-3">
+                    <div id="timer-hours" class="text-2xl sm:text-4xl font-extrabold text-white">00</div>
+                    <div class="text-[11px] text-slate-400 uppercase mt-1">Giờ</div>
+                </div>
+                <div class="bg-slate-950/60 border border-pink-500/20 rounded-2xl p-3">
+                    <div id="timer-minutes" class="text-2xl sm:text-4xl font-extrabold text-white">00</div>
+                    <div class="text-[11px] text-slate-400 uppercase mt-1">Phút</div>
+                </div>
+                <div class="bg-slate-950/60 border border-pink-500/20 rounded-2xl p-3">
+                    <div id="timer-seconds" class="text-2xl sm:text-4xl font-extrabold text-pink-400">00</div>
+                    <div class="text-[11px] text-slate-400 uppercase mt-1">Giây</div>
+                </div>
+            </div>
+            <p class="text-center text-xs text-slate-300">Kể từ <strong class="text-pink-300">27/06/2026</strong> • Nhấn để bắn pháo hoa</p>
+        </div>
+
+        <div id="hero-birthdays" class="glass-card neon-border-purple rounded-3xl p-6 cursor-pointer group hover:scale-[1.01] transition-all">
+            <div class="flex items-center justify-between mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5"><i data-lucide="cake" class="w-4 h-4 text-purple-400"></i> Sinh Nhật & Tuổi Đôi Lứa</span>
+                <span class="text-xs text-slate-400 group-hover:text-purple-300 transition flex items-center gap-1">Mở Hộp Quà <i data-lucide="gift" class="w-3.5 h-3.5"></i></span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-indigo-950/40 border border-indigo-400/25 rounded-2xl p-3.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-indigo-300 font-semibold">Hoàng Đức Dương</div>
+                        <div class="text-sm font-bold text-white mt-0.5">19/11/2009</div>
+                        <div id="duong-age-text" class="text-[11px] text-slate-400 mt-1">16 tuổi</div>
+                    </div>
+                    <div class="text-right"><span class="text-[10px] uppercase text-indigo-300 block">Còn lại</span><span id="duong-bday-countdown" class="text-lg font-extrabold text-indigo-200">-- ngày</span></div>
+                </div>
+                <div class="bg-pink-950/40 border border-pink-400/25 rounded-2xl p-3.5 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-pink-300 font-semibold">Ma Thùy Dung</div>
+                        <div class="text-sm font-bold text-white mt-0.5">10/12/2009</div>
+                        <div id="dung-age-text" class="text-[11px] text-slate-400 mt-1">16 tuổi</div>
+                    </div>
+                    <div class="text-right"><span class="text-[10px] uppercase text-pink-300 block">Còn lại</span><span id="dung-bday-countdown" class="text-lg font-extrabold text-pink-200">-- ngày</span></div>
+                </div>
+            </div>
+            <p class="text-center text-xs text-slate-400 mt-3.5">Chạm để mở thiệp chúc mừng riêng</p>
+        </div>
+
+        <div class="glass-card neon-border-amber rounded-3xl p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-amber-300 flex items-center gap-1.5"><i data-lucide="megaphone" class="w-4 h-4 text-amber-400"></i> Bảng Thông Báo Ghim</span>
+                    <button id="send-broadcast-trigger" class="text-xs px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-200 border border-amber-400/30">+ Gửi Khẩn Cấp</button>
+                </div>
+                <div class="bg-slate-950/60 border border-white/10 rounded-2xl p-4">
+                    <p id="pinned-announcement-text" class="text-sm text-slate-200 leading-relaxed">"Chào mừng công chúa Ma Thùy Dung đến với vũ trụ tình yêu riêng của hai đứa mình! ❤️"</p>
+                    <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-white/5 text-xs text-slate-400">
+                        <span id="pinned-announcement-meta">Ghim bởi: Hoàng Đức Dương</span>
+                        <div class="flex items-center gap-2">
+                            <button id="like-announcement-btn" class="px-2 py-1 rounded bg-rose-500/20 text-rose-300">❤️ <span id="announcement-likes">1</span></button>
+                            <button id="seen-announcement-btn" class="px-2 py-1 rounded bg-emerald-500/20 text-emerald-300">✓ Đã xem</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3 flex gap-2">
+                <input type="text" id="new-announcement-input" placeholder="Ghim thông báo mới..." class="flex-1 bg-slate-900/80 border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400">
+                <button id="save-announcement-btn" class="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs">Ghim</button>
+            </div>
+        </div>
+
+        <div class="glass-card neon-border-cyan rounded-3xl p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold uppercase tracking-wider text-cyan-300 flex items-center gap-1.5"><i data-lucide="music" class="w-4 h-4 text-cyan-400"></i> Không Gian Cảm Xúc</span>
+                    <select id="fx-mode-select" class="bg-slate-900 border border-white/15 rounded-lg px-2 py-1 text-xs text-cyan-200">
+                        <option value="stars">✨ Mưa Sao Băng</option>
+                        <option value="sakura">🌸 Hoa Anh Đào</option>
+                        <option value="hearts">💖 Mưa Trái Tim</option>
+                    </select>
+                </div>
+                <blockquote id="romantic-quote-text" class="italic text-sm text-cyan-100/90 bg-cyan-950/30 border-l-2 border-cyan-400 p-3.5 rounded-r-xl my-2">
+                    "Giữa hàng tỷ người trên thế giới, anh chỉ cần một ánh mắt của Dung là đủ thấy cả bầu trời bình yên."
+                </blockquote>
+            </div>
+            <div class="bg-slate-950/70 border border-white/10 rounded-2xl p-3 flex items-center justify-between mt-3">
+                <div class="flex items-center gap-3">
+                    <div id="vinyl-disc" class="w-10 h-10 rounded-full bg-gradient-to-tr from-slate-800 via-cyan-900 to-pink-600 border-2 border-white/20 flex items-center justify-center"><div class="w-2.5 h-2.5 rounded-full bg-slate-950"></div></div>
+                    <div>
+                        <div id="music-track-title" class="text-xs font-bold text-white">Giai Điệu Ánh Trăng (Piano)</div>
+                        <div id="music-status-label" class="text-[11px] text-slate-400">Nhấn Play để bật nhạc nền</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="toggle-music-btn" class="w-10 h-10 rounded-xl bg-cyan-500 text-slate-950 flex items-center justify-center"><i data-lucide="play" class="w-4 h-4 fill-current"></i></button>
+                    <button id="next-track-btn" class="p-2.5 rounded-xl bg-white/5 text-slate-300"><i data-lucide="skip-forward" class="w-4 h-4"></i></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CHAT & ĐỜI SỐNG HÀNG NGÀY -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 glass-card rounded-3xl p-5 border border-white/10 flex flex-col h-[400px]">
+            <div class="flex items-center justify-between pb-3 border-b border-white/10">
+                <div class="flex items-center gap-2"><i data-lucide="message-circle-heart" class="w-5 h-5 text-pink-400"></i><h2 class="font-bold text-sm sm:text-base">Chat Liên Kết Real-time</h2></div>
+            </div>
+            <div id="chat-messages-container" class="flex-1 overflow-y-auto py-4 space-y-3 pr-1 custom-scrollbar"></div>
+            <form id="chat-form" class="pt-3 border-t border-white/10 flex items-center gap-2">
+                <button type="button" id="send-heart-burst-btn" class="p-2.5 rounded-xl bg-pink-500/20 text-pink-300">❤️</button>
+                <input type="text" id="chat-input" placeholder="Nhắn gửi yêu thương..." autocomplete="off" class="flex-1 bg-slate-900/80 border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-pink-500">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-500 to-rose-600 font-bold text-sm text-white"><i data-lucide="send" class="w-4 h-4"></i></button>
+            </form>
+        </div>
+
+        <div class="glass-card rounded-3xl p-5 border border-white/10 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+                    <h2 class="font-bold text-sm sm:text-base flex items-center gap-2"><i data-lucide="utensils" class="w-4 h-4 text-emerald-400"></i> Nhật Ký Hôm Nay</h2>
+                </div>
+                <div class="space-y-3 text-xs">
+                    <div class="p-3 rounded-2xl bg-indigo-950/30 border border-indigo-400/20">
+                        <div class="font-bold text-indigo-300 mb-1">👑 Hoàng Đức Dương</div>
+                        <p id="status-duong-display" class="text-slate-300">Ngủ: 7.5h • Tâm trạng: Nhớ Dung</p>
+                    </div>
+                    <div class="p-3 rounded-2xl bg-pink-950/30 border border-pink-400/20">
+                        <div class="font-bold text-pink-300 mb-1">👸 Ma Thùy Dung</div>
+                        <p id="status-dung-display" class="text-slate-300">Ngủ: 8h • Tâm trạng: Hạnh phúc</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 pt-3 border-t border-white/10 space-y-2">
+                <input type="text" id="my-daily-status-input" placeholder="Cập nhật trạng thái của bạn..." class="w-full bg-slate-900/80 border border-white/15 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-400">
+                <button id="update-daily-status-btn" class="w-full py-2 rounded-xl bg-emerald-600/80 font-bold text-xs text-white">Cập Nhật Trạng Thái</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 30 TIỂU VŨ TRỤ -->
+    <section class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+                <h2 class="text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-purple-300 to-indigo-300">30 Tiểu Vũ Trụ Kỳ Diệu</h2>
+                <p class="text-xs text-slate-400">Khám phá đủ các ô để mở khóa Thiên Đường Vĩnh Cửu (Ô số 30)</p>
+            </div>
+            <div class="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs text-pink-300 font-semibold">
+                Đã mở khóa: <span id="unlocked-worlds-count">0</span> / 29
+            </div>
+        </div>
+        <div id="mini-worlds-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3.5"></div>
+    </section>
+</main>
+
+<!-- MODAL -->
+<div id="world-modal" class="hidden fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex flex-col animate-fade-in">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/10 bg-slate-900/50">
+        <div class="flex items-center gap-3">
+            <span id="modal-world-icon" class="text-2xl">✨</span>
+            <div>
+                <h3 id="modal-world-title" class="font-bold text-lg text-white">Tiêu đề</h3>
+                <p id="modal-world-subtitle" class="text-xs text-slate-400">Mô tả</p>
+            </div>
+        </div>
+        <button id="close-world-modal-btn" class="p-2.5 rounded-xl bg-white/10 hover:bg-rose-500/80 text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div id="modal-world-body" class="flex-1 overflow-y-auto p-6 max-w-5xl w-full mx-auto"></div>
+</div>
+
+<!-- SCRIPT TỔNG HỢP -->
+<script>
+    const COUPLE_CONFIG = {
+        host: { name: "Hoàng Đức Dương", shortName: "Dương", role: "host", avatar: "👑" },
+        vip: { name: "Ma Thùy Dung", shortName: "Dung", role: "vip", avatar: "👸" },
+        anniversaryDate: "2026-06-27T00:00:00+07:00",
+        defaultPasscode: "27062026",
+        adminPin: "19112009"
+    };
+
+    const ROMANTIC_QUOTES = [
+        "Giữa hàng tỷ người trên thế giới, anh chỉ cần một ánh mắt của Dung là đủ thấy cả bầu trời bình yên.",
+        "Từ ngày 27/06/2026, lịch của anh chỉ có hai mùa: mùa nhớ Dung và mùa được ở cạnh Dung.",
+        "Dù sau này có đi qua bao nhiêu năm tháng, công chúa Ma Thùy Dung vẫn luôn là ngoại lệ duy nhất của Dương."
+    ];
+
+    const MINI_WORLDS = [
+        { id: 1, icon: "🔐", title: "Hộp Thư Tình Bí Mật", desc: "Két sắt vàng hồng hẹn giờ mở khóa" },
+        { id: 2, icon: "📖", title: "Sổ Tay Nịnh Người Yêu", desc: "500+ câu khen ngợi & dỗ dành" },
+        { id: 3, icon: "🎟️", title: "Vé Phạt Yêu Thương", desc: "Vé miễn giận, trà sữa, ôm 5 phút" },
+        { id: 4, icon: "🎡", title: "Vòng Quay Quyết Định", desc: "Bánh xe 12 ô chọn món ăn & đi chơi" },
+        { id: 5, icon: "🌳", title: "Cây Tình Yêu Sinh Trưởng", desc: "Tiến hóa 7 cấp độ từ 27/06/2026" },
+        { id: 6, icon: "🎨", title: "Bảng Vẽ Nguệch Ngoạc", desc: "Canvas vẽ chung real-time" },
+        { id: 7, icon: "🍳", title: "Sổ Tay Nấu Ăn Đôi Lứa", desc: "Công thức món ngon & đi chợ" },
+        { id: 8, icon: "🎬", title: "Danh Sách Phim Muốn Xem", desc: "Rạp phim đỏ nhung & chấm điểm" },
+        { id: 9, icon: "🥺", title: "Góc Hờn Dỗi & Làm Nũng", desc: "Thanh đo mức dỗi 1-100%" },
+        { id: 10, icon: "⚡", title: "Trò Chơi Quiz Đôi Lứa", desc: "Đố vui đối kháng 15s" },
+        { id: 11, icon: "🗺️", title: "Bản Đồ Ước Mơ", desc: "Ghim địa điểm muốn đi cùng nhau" },
+        { id: 12, icon: "🐷", title: "Quỹ Đen Tình Yêu", desc: "Heo đất pha lê & tiết kiệm" },
+        { id: 13, icon: "🪪", title: "Thẻ Căn Cước Tình Yêu", desc: "ID Hologram 7 màu độc quyền" },
+        { id: 14, icon: "🌸", title: "Góc Thơ Ca & Lời Văn", desc: "Không gian thơ giấy ngà" },
+        { id: 15, icon: "🎁", title: "Hộp Quà Bất Ngờ Mỗi Ngày", desc: "Gacha mở quà 1 lần/ngày" },
+        { id: 16, icon: "🏛️", title: "Kỷ Niệm Món Quà Đầu", desc: "Bảo tàng ảo trưng bày kỷ vật" },
+        { id: 17, icon: "📘", title: "Sổ Tay Lời Hứa", desc: "Xác nhận vân tay đôi đóng dấu đỏ" },
+        { id: 18, icon: "💓", title: "Trạm Phát Sóng Nhớ Nhung", desc: "Gửi nhịp tim rung thiết bị" },
+        { id: 19, icon: "📈", title: "Bảng Điểm Hạnh Phúc", desc: "Biểu đồ phân tích tâm trạng" },
+        { id: 20, icon: "💿", title: "Góc Âm Nhạc Lãng Mạn", desc: "Đĩa than xoay tròn & phát nhạc" },
+        { id: 21, icon: "🚀", title: "Thám Hiểm 5 Năm Sau", desc: "Niêm phong thư tới 27/06/2031" },
+        { id: 22, icon: "🧩", title: "Thử Thách 365 Ngày Yêu", desc: "Lưới thẻ ghép tranh trái tim" },
+        { id: 23, icon: "🕯️", title: "Góc Thú Nhận", desc: "Phòng ánh nến & bùa miễn tội" },
+        { id: 24, icon: "✈️", title: "Nhật Ký Chuyến Đi", desc: "Tạp chí du lịch & slideshow" },
+        { id: 25, icon: "📅", title: "Thực Đơn Hẹn Hò Tuần", desc: "Lịch trình 7 ngày kéo thả" },
+        { id: 26, icon: "🍿", title: "Phòng Chiếu Phim Mini", desc: "Xem chung video & bắn emoji" },
+        { id: 27, icon: "☁️", title: "Góc Biệt Danh", desc: "Đám mây từ khóa 3D biệt danh" },
+        { id: 28, icon: "🤪", title: "Sưu Tầm Sticker & Meme", desc: "Tự cắt ảnh dìm làm sticker" },
+        { id: 29, icon: "🏆", title: "Góc Tự Hào Về Nhau", desc: "Phòng trưng bày cúp vàng" },
+        { id: 30, icon: "🌌", title: "Thiên Đường Vĩnh Cửu", desc: "Dải ngân hà 3D vĩnh cửu" }
+    ];
+
+    // State & Sync Engine
+    class LocalSyncEngine {
+        constructor() {
+            this.storageKey = 'ELU_STATE_SINGLE_V1';
+            this.channel = new BroadcastChannel('elu_single_channel');
+            this.state = this.loadState();
+            this.channel.onmessage = (e) => {
+                if (e.data && e.data.payload) {
+                    this.state = e.data.payload;
+                    if (this.onUpdate) this.onUpdate(this.state);
+                }
+            };
+        }
+        loadState() {
+            const s = localStorage.getItem(this.storageKey);
+            if (s) { try { return JSON.parse(s); } catch(e){} }
+            return {
+                passcode: COUPLE_CONFIG.defaultPasscode,
+                maintenanceMode: false,
+                announcement: { text: "Chào mừng công chúa Ma Thùy Dung đến với vũ trụ tình yêu riêng!", author: "Hoàng Đức Dương", likes: 1, seenByVip: false },
+                broadcast: null,
+                messages: [{ id: "m1", sender: "host", senderName: "Dương", text: "Vũ trụ tình yêu của chúng ta đã sẵn sàng! ❤️", time: "12:00" }],
+                dailyStatus: { host: "Ngủ: 7.5h • Nhớ Dung", vip: "Ngủ: 8h • Hạnh phúc" },
+                unlockedWorlds: []
+            };
+        }
+        update(fn) {
+            fn(this.state);
+            localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+            this.channel.postMessage({ payload: this.state });
+            if (this.onUpdate) this.onUpdate(this.state);
+        }
+    }
+    const sync = new LocalSyncEngine();
+
+    // Canvas FX
+    class UniverseFX {
+        constructor() {
+            this.bgC = document.getElementById('universe-canvas');
+            this.fxC = document.getElementById('fx-canvas');
+            this.bgCtx = this.bgC.getContext('2d');
+            this.fxCtx = this.fxC.getContext('2d');
+            this.mode = 'stars';
+            this.particles = [];
+            this.fireworks = [];
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+            this.initP();
+            this.loop();
+        }
+        resize() {
+            this.w = this.bgC.width = this.fxC.width = window.innerWidth;
+            this.h = this.bgC.height = this.fxC.height = window.innerHeight;
+        }
+        setMode(m) { this.mode = m; this.initP(); }
+        initP() {
+            this.particles = [];
+            for(let i=0; i<100; i++) {
+                this.particles.push({
+                    x: Math.random()*this.w, y: Math.random()*this.h,
+                    size: Math.random()*2.5+1,
+                    sy: this.mode==='stars'?Math.random()*0.2+0.05:Math.random()*1.2+0.6,
+                    sx: this.mode==='stars'?0:Math.random()*1-0.5,
+                    alpha: Math.random()*0.8+0.2, angle: Math.random()*Math.PI*2
+                });
+            }
+        }
+        firework(x, y) {
+            const colors = ['#f43f5e', '#ec4899', '#a855f7', '#fbbf24', '#38bdf8'];
+            for(let i=0; i<40; i++) {
+                const angle = (Math.PI*2*i)/40;
+                const speed = Math.random()*5+2;
+                this.fireworks.push({ x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, alpha: 1, color: colors[Math.floor(Math.random()*colors.length)], size: Math.random()*3+1.5 });
+            }
+        }
+        loop() {
+            this.bgCtx.clearRect(0, 0, this.w, this.h);
+            this.particles.forEach(p => {
+                p.y += p.sy; p.x += p.sx;
+                if(p.y > this.h) { p.y = -10; p.x = Math.random()*this.w; }
+                this.bgCtx.fillStyle = `rgba(255,255,255,${p.alpha})`;
+                this.bgCtx.beginPath(); this.bgCtx.arc(p.x, p.y, p.size, 0, Math.PI*2); this.bgCtx.fill();
+            });
+
+            this.fxCtx.clearRect(0, 0, this.w, this.h);
+            this.fireworks.forEach((fw, idx) => {
+                fw.x += fw.vx; fw.y += fw.vy; fw.vy += 0.08; fw.alpha -= 0.02;
+                if(fw.alpha <= 0) { this.fireworks.splice(idx, 1); return; }
+                this.fxCtx.globalAlpha = fw.alpha;
+                this.fxCtx.fillStyle = fw.color;
+                this.fxCtx.beginPath(); this.fxCtx.arc(fw.x, fw.y, fw.size, 0, Math.PI*2); this.fxCtx.fill();
+            });
+            this.fxCtx.globalAlpha = 1;
+            requestAnimationFrame(() => this.loop());
+        }
+    }
+    const fx = new UniverseFX();
+
+    // Audio Engine
+    class AudioEngine {
+        constructor() { this.ctx = null; this.playing = false; this.timer = null; }
+        toggle() {
+            if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            if(this.ctx.state === 'suspended') this.ctx.resume();
+            this.playing = !this.playing;
+            if(this.playing) {
+                const notes = [261.63, 329.63, 392.00, 493.88, 523.25];
+                let idx = 0;
+                this.timer = setInterval(() => {
+                    if(!this.playing) return;
+                    const osc = this.ctx.createOscillator();
+                    const g = this.ctx.createGain();
+                    osc.frequency.setValueAtTime(notes[idx%notes.length], this.ctx.currentTime);
+                    g.gain.setValueAtTime(0.001, this.ctx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.06, this.ctx.currentTime + 0.08);
+                    g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + 1.2);
+                    osc.connect(g); g.connect(this.ctx.destination);
+                    osc.start(); osc.stop(this.ctx.currentTime + 1.2);
+                    idx++;
+                }, 700);
+            } else {
+                clearInterval(this.timer);
+            }
+            return this.playing;
+        }
+    }
+    const audio = new AudioEngine();
+
+    // Main App Controller
+    document.addEventListener('DOMContentLoaded', () => {
+        lucide.createIcons();
+        let currentUser = null;
+
+        // Lock screen auth
+        const passcodeIn = document.getElementById('passcode-input');
+        const verifyBtn = document.getElementById('verify-passcode-btn');
+        const errorTxt = document.getElementById('auth-error');
+
+        const handleAuth = () => {
+            const val = passcodeIn.value.trim();
+            if(val === sync.state.passcode || val === COUPLE_CONFIG.adminPin) {
+                errorTxt.classList.add('hidden');
+                document.getElementById('auth-step-password').classList.add('hidden');
+                document.getElementById('auth-step-role').classList.remove('hidden');
+            } else {
+                errorTxt.textContent = "Mật mã chưa chính xác! Gợi ý: 27062026";
+                errorTxt.classList.remove('hidden');
+            }
+        };
+        verifyBtn.addEventListener('click', handleAuth);
+        passcodeIn.addEventListener('keydown', e => { if(e.key === 'Enter') handleAuth(); });
+        document.getElementById('hint-btn').addEventListener('click', () => document.getElementById('hint-box').classList.toggle('hidden'));
+
+        document.querySelectorAll('.role-select-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const role = btn.dataset.role;
+                currentUser = role === 'host' ? COUPLE_CONFIG.host : COUPLE_CONFIG.vip;
+                if(sync.state.maintenanceMode && role !== 'host') {
+                    document.getElementById('maintenance-overlay').classList.remove('hidden');
+                    return;
+                }
+                document.getElementById('lock-screen').classList.add('hidden');
+                document.getElementById('main-app').classList.remove('hidden');
+                document.getElementById('current-user-avatar').textContent = currentUser.avatar;
+                document.getElementById('current-user-name').textContent = currentUser.name;
+                if(role === 'host') document.getElementById('open-host-panel-btn').classList.remove('hidden');
+                fx.firework(window.innerWidth/2, window.innerHeight/3);
+                lucide.createIcons();
+            });
+        });
+
+        // Timers
+        const startTimestamp = new Date(COUPLE_CONFIG.anniversaryDate).getTime();
+        setInterval(() => {
+            const diff = Math.max(0, Date.now() - startTimestamp);
+            document.getElementById('timer-days').textContent = Math.floor(diff / (1000*60*60*24));
+            document.getElementById('timer-hours').textContent = String(Math.floor((diff/(1000*60*60))%24)).padStart(2,'0');
+            document.getElementById('timer-minutes').textContent = String(Math.floor((diff/1000/60)%60)).padStart(2,'0');
+            document.getElementById('timer-seconds').textContent = String(Math.floor((diff/1000)%60)).padStart(2,'0');
+        }, 1000);
+
+        // Birthdays countdown
+        const calcBday = (m, d, y) => {
+            const now = new Date();
+            let age = now.getFullYear() - y;
+            let next = new Date(now.getFullYear(), m-1, d);
+            if(now > next) next.setFullYear(now.getFullYear()+1);
+            else age--;
+            return { age, left: Math.ceil((next - now)/(1000*60*60*24)) };
+        };
+        const d1 = calcBday(11, 19, 2009), d2 = calcBday(12, 10, 2009);
+        document.getElementById('duong-age-text').textContent = `${d1.age} tuổi`;
+        document.getElementById('duong-bday-countdown').textContent = `${d1.left} ngày`;
+        document.getElementById('dung-age-text').textContent = `${d2.age} tuổi`;
+        document.getElementById('dung-bday-countdown').textContent = `${d2.left} ngày`;
+
+        // Dashboard events
+        document.getElementById('hero-love-timer').addEventListener('click', e => fx.firework(e.clientX, e.clientY));
+        document.getElementById('hero-birthdays').addEventListener('click', () => {
+            fx.firework(window.innerWidth/2, window.innerHeight/3);
+            openModal("🎂", "Hộp Quà Sinh Nhật Đôi Lứa", "19/11 & 10/12", `<div class="text-center py-6 space-y-4"><div class="text-6xl animate-bounce">🎁</div><h3 class="text-2xl font-bold text-pink-300">Chúc Mừng Sinh Nhật!</h3><p class="text-slate-300">Chúc Hoàng Đức Dương & Ma Thùy Dung luôn hạnh phúc viên mãn!</p></div>`);
+        });
+
+        document.getElementById('save-announcement-btn').addEventListener('click', () => {
+            const inp = document.getElementById('new-announcement-input');
+            if(!inp.value.trim()) return;
+            sync.update(s => { s.announcement = { text: inp.value.trim(), author: currentUser.name, likes: 0, seenByVip: false }; });
+            inp.value = "";
+        });
+        document.getElementById('like-announcement-btn').addEventListener('click', () => sync.update(s => s.announcement.likes++));
+        document.getElementById('seen-announcement-btn').addEventListener('click', () => sync.update(s => s.announcement.seenByVip = true));
+
+        document.getElementById('send-broadcast-trigger').addEventListener('click', () => {
+            const msg = prompt("Nhập thông báo khẩn cấp toàn màn hình:");
+            if(msg) sync.update(s => { s.broadcast = { id: Date.now(), sender: currentUser.shortName, text: msg }; });
+        });
+        document.getElementById('close-broadcast-btn').addEventListener('click', () => document.getElementById('broadcast-modal').classList.add('hidden'));
+
+        document.getElementById('fx-mode-select').addEventListener('change', e => fx.setMode(e.target.value));
+        document.getElementById('toggle-music-btn').addEventListener('click', () => {
+            const playing = audio.toggle();
+            document.getElementById('music-status-label').textContent = playing ? "Đang phát piano..." : "Đã tạm dừng";
+            document.getElementById('vinyl-disc').classList.toggle('vinyl-spinning', playing);
+        });
+
+        // Chat
+        document.getElementById('chat-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const inp = document.getElementById('chat-input');
+            if(!inp.value.trim()) return;
+            sync.update(s => {
+                s.messages.push({ id: "m_"+Date.now(), sender: currentUser.role, senderName: currentUser.shortName, text: inp.value.trim(), time: new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) });
+            });
+            inp.value = "";
+        });
+        document.getElementById('send-heart-burst-btn').addEventListener('click', () => {
+            sync.update(s => s.messages.push({ id: "m_"+Date.now(), sender: currentUser.role, senderName: currentUser.shortName, text: "❤️ Gửi ngàn yêu thương!", time: new Date().toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) }));
+            fx.firework(window.innerWidth/2, window.innerHeight/2);
+        });
+
+        document.getElementById('update-daily-status-btn').addEventListener('click', () => {
+            const inp = document.getElementById('my-daily-status-input');
+            if(!inp.value.trim()) return;
+            sync.update(s => s.dailyStatus[currentUser.role] = inp.value.trim());
+            inp.value = "";
+        });
+
+        document.getElementById('open-host-panel-btn').addEventListener('click', () => {
+            const isM = sync.state.maintenanceMode;
+            openModal("👑", "Bảng Điều Khiển Máy Chủ", "Super Admin Control", `
+                <div class="space-y-4 max-w-lg mx-auto">
+                    <div class="glass-card p-4 rounded-2xl flex items-center justify-between">
+                        <div><div class="font-bold text-white">Chế độ bảo trì</div><div class="text-xs text-slate-400">Khóa máy khách khi nâng cấp</div></div>
+                        <button id="maint-toggle-btn" class="px-4 py-2 rounded-xl font-bold text-xs ${isM?'bg-rose-600 text-white':'bg-emerald-600 text-white'}">${isM?'ĐANG BẬT':'ĐANG TẮT'}</button>
+                    </div>
+                </div>
+            `);
+            document.getElementById('maint-toggle-btn').addEventListener('click', () => {
+                sync.update(s => s.maintenanceMode = !s.maintenanceMode);
+                document.getElementById('world-modal').classList.add('hidden');
+            });
+        });
+
+        document.getElementById('open-settings-btn').addEventListener('click', () => {
+            openModal("⚙️", "Cài Đặt Mật Khẩu", "Đổi mật khẩu đồng bộ real-time", `
+                <div class="max-w-md mx-auto space-y-3">
+                    <input type="password" id="new-p" placeholder="Mật khẩu mới..." class="w-full bg-slate-900 border border-white/15 rounded-xl px-3 py-2 text-white text-sm">
+                    <button id="save-p-btn" class="w-full py-2.5 rounded-xl bg-pink-600 text-white font-bold text-sm">Cập Nhật Mật Khẩu</button>
+                </div>
+            `);
+            document.getElementById('save-p-btn').addEventListener('click', () => {
+                const np = document.getElementById('new-p').value.trim();
+                if(np.length >= 4) {
+                    sync.update(s => s.passcode = np);
+                    alert("Đổi mật khẩu thành công!");
+                    document.getElementById('world-modal').classList.add('hidden');
+                } else alert("Mật khẩu phải từ 4 ký tự!");
+            });
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('lock-screen').classList.remove('hidden');
+            document.getElementById('auth-step-password').classList.remove('hidden');
+            document.getElementById('auth-step-role').classList.add('hidden');
+            document.getElementById('passcode-input').value = "";
+        });
+
+        document.getElementById('close-world-modal-btn').addEventListener('click', () => document.getElementById('world-modal').classList.add('hidden'));
+
+        // Render 30 Mini Worlds
+        const grid = document.getElementById('mini-worlds-grid');
+        grid.innerHTML = MINI_WORLDS.map(w => `
+            <div data-id="${w.id}" class="world-card-3d glass-card rounded-2xl p-4 border border-white/10 cursor-pointer flex flex-col justify-between group">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-2xl group-hover:scale-125 transition">${w.icon}</span>
+                    <span class="text-[10px] font-bold text-slate-500">#${String(w.id).padStart(2,'0')}</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-xs sm:text-sm text-white group-hover:text-pink-300 line-clamp-1">${w.title}</h3>
+                    <p class="text-[11px] text-slate-400 line-clamp-2 mt-1">${w.desc}</p>
+                </div>
+            </div>
+        `).join('');
+
+        grid.querySelectorAll('[data-id]').forEach(card => {
+            card.addEventListener('click', () => {
+                const id = Number(card.dataset.id);
+                const w = MINI_WORLDS.find(item => item.id === id);
+                if(id < 30 && !sync.state.unlockedWorlds.includes(id)) {
+                    sync.update(s => s.unlockedWorlds.push(id));
+                }
+                openModal(w.icon, `#${w.id} • ${w.title}`, w.desc, `
+                    <div class="text-center py-8 space-y-4">
+                        <div class="text-6xl">${w.icon}</div>
+                        <h4 class="text-2xl font-bold text-white">${w.title}</h4>
+                        <p class="text-sm text-slate-300 max-w-md mx-auto">${w.desc}</p>
+                        <div class="px-4 py-2 rounded-full bg-emerald-500/20 text-emerald-300 text-xs inline-block">✓ Đã kích hoạt tiểu vũ trụ thành công!</div>
+                    </div>
+                `);
+            });
+        });
+
+        function openModal(icon, title, sub, html) {
+            document.getElementById('modal-world-icon').textContent = icon;
+            document.getElementById('modal-world-title').textContent = title;
+            document.getElementById('modal-world-subtitle').textContent = sub;
+            document.getElementById('modal-world-body').innerHTML = html;
+            document.getElementById('world-modal').classList.remove('hidden');
+        }
+
+        // State update renderer
+        sync.onUpdate = (state) => {
+            document.getElementById('pinned-announcement-text').textContent = `"${state.announcement.text}"`;
+            document.getElementById('pinned-announcement-meta').textContent = `Ghim bởi: ${state.announcement.author} ${state.announcement.seenByVip?'• ✓ Đã xem':''}`;
+            document.getElementById('announcement-likes').textContent = state.announcement.likes;
+            document.getElementById('status-duong-display').textContent = state.dailyStatus.host;
+            document.getElementById('status-dung-display').textContent = state.dailyStatus.vip;
+            document.getElementById('unlocked-worlds-count').textContent = state.unlockedWorlds.length;
+
+            const cBox = document.getElementById('chat-messages-container');
+            cBox.innerHTML = state.messages.map(m => {
+                const isMe = currentUser && m.sender === currentUser.role;
+                return `
+                    <div class="flex flex-col ${isMe?'items-end':'items-start'}">
+                        <span class="text-[10px] text-slate-400 mb-0.5 px-1">${m.senderName} • ${m.time}</span>
+                        <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-sm ${isMe?'bg-gradient-to-r from-pink-600 to-rose-500 text-white rounded-br-none':'bg-slate-800/90 text-slate-100 border border-white/10 rounded-bl-none'}">${m.text}</div>
+                    </div>
+                `;
+            }).join('');
+            cBox.scrollTop = cBox.scrollHeight;
+
+            if(state.broadcast && window.lastBrdId !== state.broadcast.id) {
+                window.lastBrdId = state.broadcast.id;
+                if(currentUser) {
+                    document.getElementById('broadcast-sender').textContent = state.broadcast.sender;
+                    document.getElementById('broadcast-text').textContent = state.broadcast.text;
+                    document.getElementById('broadcast-modal').classList.remove('hidden');
+                }
+            }
+        };
+        sync.onUpdate(sync.state);
+    });
+</script>
